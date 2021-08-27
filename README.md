@@ -40,13 +40,13 @@ Congratulations, you have successfully added the dependency.
 Now to get started with JetFirestore add the following code snippet
 ```kotlin
 JetFirestore(
-    	path = { collection("books").document("6RaxAU1WrXadOHlBaMUk") },
+    	path = { collection("books") },
 	queryOnCollection = { orderBy("author", Query.Direction.DESCENDING) },
-	onSingleTimeDocumentFetch = { values,  exception ->
-		books = values.getObject()
+	onRealtimeCollectionFetch = { values,  exception ->
+		books = values.getListOfObjects()
 	}
 ) {
-	Text(books.author)
+	Text(...)
 }
 ```
 <br>
@@ -96,22 +96,26 @@ You can also show toast like a snackbar
 Surface(color = MaterialTheme.colors.background) {
 
   var books by remember {
-        mutableStateOf<Books?>(null)
+        mutableStateOf<List<Books>?>(null)
   }
 
   JetFirestore(path = { collection("books") },
               queryOnCollection = { orderBy("author", Query.Direction.DESCENDING) },
               onRealtimeCollectionFetch = { values,  exception ->
-                            books = values.getObject()
+                            books = values.getListOfObjects()
               }
   ) {
         books?.let {
-                Card(modifier = Modifier.fillMaxWidth().padding(12.dp), elevation = 12.dp) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(text = it.name)
-                        Text(text = it.author)
-                    }
-                }
+	    LazyColumn {
+	    	items(it) {
+			Card(modifier = Modifier.fillMaxWidth().padding(12.dp), elevation = 12.dp) {
+			    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+				Text(text = it.name)
+				Text(text = it.author)
+			    }
+			}
+		}
+	    }
         } ?: Text(text = "Please wait...")
     }
 }
