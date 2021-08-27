@@ -99,9 +99,9 @@ Surface(color = MaterialTheme.colors.background) {
         mutableStateOf<Books?>(null)
   }
 
-  JetFirestore(path = { collection("books").document("6RaxAU1WrXadOHlBaMUk") },
+  JetFirestore(path = { collection("books") },
               queryOnCollection = { orderBy("author", Query.Direction.DESCENDING) },
-              onSingleTimeDocumentFetch = { values,  exception ->
+              onRealtimeCollectionFetch = { values,  exception ->
                             books = values.getObject()
               }
   ) {
