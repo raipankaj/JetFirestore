@@ -91,11 +91,11 @@ fun BooksInformation() {
     ) { pagination ->
 	Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
 	    ListItem(booksList)
-		Row {
-			Button(onClick = { pagination.loadNextPage() }, modifier = Modifier.fillMaxWidth()) {
-			    Text("Next")
-                        }
+	    Row {
+		Button(onClick = { pagination.loadNextPage() }, modifier = Modifier.fillMaxWidth()) {
+		    Text("Next")
                 }
+            }
          }
     }
 }
