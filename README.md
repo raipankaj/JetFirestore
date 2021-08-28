@@ -33,17 +33,20 @@ dependencyResolutionManagement {
 
 Once you have added the maven url now add the Stories dependency in the <b>build.gradle (module level)</b>
 ```groovy
-implementation 'com.github.raipankaj:JetFirestore:1.0.2'
+implementation 'com.github.raipankaj:JetFirestore:1.0.3'
 ```
 
 Congratulations, you have successfully added the dependency. 
 Now to get started with JetFirestore add the following code snippet
 ```kotlin
+
+var booksList by remember { mutableStateOf(listOf<Books>()) }
+
 JetFirestore(
     	path = { collection("books") },
 	queryOnCollection = { orderBy("author", Query.Direction.DESCENDING) },
 	onRealtimeCollectionFetch = { values,  exception ->
-		books = values.getListOfObjects()
+		booksList = values.getListOfObjects()
 	}
 ) {
 	Text(...)
@@ -56,67 +59,44 @@ Here are all the parameters accepted by JetFirestore composable.
 @Composable
 fun JetFirestore(
     path: FirebaseFirestore.() -> Any,
+    limitOnSingleTimeCollectionFetch: Long = 0,
     queryOnCollection: (CollectionReference.() -> Query)? = null,
     onSingleTimeCollectionFetch: ((QuerySnapshot?, Exception?) -> Unit)? = null,
     onSingleTimeDocumentFetch: ((DocumentSnapshot?, Exception?) -> Unit)? = null,
     onRealtimeCollectionFetch: ((QuerySnapshot?, FirebaseFirestoreException?) -> Unit)? = null,
     onRealtimeDocumentFetch: ((DocumentSnapshot?, FirebaseFirestoreException?) -> Unit)? = null,
-    content: @Composable () -> Unit
+    content: @Composable (Pagination) -> Unit
 )
 ```
 
 </br>
-Here is a code snippet to show default toast
+Here is a code snippet to show list of documents based on pagination
 
 ```kotlin
 @Composable
-fun DefaultToast() {
-    var showToast by remember {
-        mutableStateOf(false)
-    }
+fun BooksInformation() {
+    var booksList by remember { mutableStateOf(listOf<Books>()) }
 
-    Column(Modifier.height(80.dp)) {
+    JetFirestore(
+	path = { collection("books") },
+	limitOnSingleTimeCollectionFetch = 2,
+	queryOnCollection = { orderBy("cost", Query.Direction.DESCENDING) },
+	onSingleTimeCollectionFetch = { values,  exception ->
+	//When all documents are fetched
+	//booksList = values.getListOfObjects()
 
-        Text("Default Toast", Modifier.fillMaxWidth().clickable {
-                showToast = true
-        }, textAlign = TextAlign.Center)
-        Toast(
-            message = "Simple Toast",
-            showToast = showToast,
-            afterToastShown = { showToast = it },
-        )
-    }
-}
-```
-
-<br>
-You can also show toast like a snackbar
-
-```kotlin
-Surface(color = MaterialTheme.colors.background) {
-
-  var books by remember {
-        mutableStateOf<List<Books>?>(null)
-  }
-
-  JetFirestore(path = { collection("books") },
-              queryOnCollection = { orderBy("author", Query.Direction.DESCENDING) },
-              onRealtimeCollectionFetch = { values,  exception ->
-                            books = values.getListOfObjects()
-              }
-  ) {
-        books?.let {
-	    LazyColumn {
-	    	items(it) {
-			Card(modifier = Modifier.fillMaxWidth().padding(12.dp), elevation = 12.dp) {
-			    Row(horizontalArrangement = Arrangement.SpaceBetween) {
-				Text(text = it.name)
-				Text(text = it.author)
-			    }
-			}
-		}
-	    }
-        } ?: Text(text = "Please wait...")
+	//When documents are fetched based on limit
+	booksList = booksList + values.getListOfObjects()
+	}
+    ) { pagination ->
+	Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+	    ListItem(booksList)
+		Row {
+			Button(onClick = { pagination.loadNextPage() }, modifier = Modifier.fillMaxWidth()) {
+			    Text("Next")
+                        }
+                }
+         }
     }
 }
 ```
